@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Project Proposal Template - Holland Family Home Services</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icon Library -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .item-row { transition: all 0.2s ease-in-out; }
+        .item-row.selected { background-color: #f8fafc; border-color: #cbd5e1; }
+        .item-row.disabled-card { opacity: 0.45; background-color: #f1f5f9; }
+
+        /* Scrollbar aesthetics */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Print styles for PDF contract generation */
+        @media print {
+            .no-print { display: none !important; }
+            .no-break { break-inside: avoid; }
+            body { background-color: white; color: black; padding: 0; margin: 0; }
+            .shadow-lg, .shadow-xl { box-shadow: none !important; }
+            .border { border: 1px solid #e2e8f0 !important; }
+            .item-row:not(.selected) { display: none !important; }
+            .print-border-b { border-bottom: 2px solid #0f172a !important; }
+        }
+
+        /* Gantt Chart Styles */
+        .gantt-chart {
+            display: grid;
+            grid-template-columns: 150px repeat(14, 1fr); /* 14 working days */
+            gap: 2px;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.75rem;
+        }
+        .gantt-header-row {
+            display: contents;
+            font-weight: bold;
+            text-align: center;
+        }
+        .gantt-header-cell {
+            background-color: #e2e8f0;
+            padding: 8px 4px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .gantt-header-task {
+            text-align: left;
+            padding-left: 8px;
+        }
+        .gantt-row {
+            display: contents;
+        }
+        .gantt-task-name {
+            background-color: white;
+            padding: 8px;
+            font-weight: 500;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+        }
+        .gantt-cell {
+            background-color: white;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px dotted #e2e8f0;
+            position: relative;
+        }
+        .gantt-bar {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 0;
+            right: 0;
+            border-radius: 4px;
+            background-color: #0d9488; /* teal-600 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen py-12 px-4 print:py-0 print:px-0">
+
+    <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200 print:shadow-none print:border-0 print:rounded-none">
+        
+        <!-- Header Banner -->
+        <div class="bg-slate-900 text-white p-8 md:p-10 border-b border-slate-800 print:bg-white print:text-slate-900 print:border-b-2 print:border-slate-900 print:p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-6">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700 print:hidden">
+                            <i class="fa-solid fa-house-chimney text-xl text-teal-400" id="ui-company-icon"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-extrabold uppercase tracking-tight text-white print:text-slate-900" id="ui-company-name">Company Name</h1>
+                            <h2 class="text-sm font-semibold tracking-widest text-teal-400 uppercase print:text-slate-500" id="ui-company-subtitle">Home Services, Inc.</h2>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-400 print:text-slate-600 space-y-1">
+                        <span class="block"><i class="fa-solid fa-location-dot mr-2 text-teal-500 print:hidden"></i><span id="ui-company-address"></span></span>
+                        <span class="block"><i class="fa-solid fa-phone mr-2 text-teal-500 print:hidden"></i><span id="ui-company-phone"></span></span>
+                        <span class="block"><i class="fa-solid fa-envelope mr-2 text-teal-500 print:hidden"></i><span id="ui-company-email"></span></span>
+                    </p>
+                </div>
+                <div class="text-left md:text-right w-full md:w-auto flex flex-col md:items-end">
+                    <span class="bg-teal-500/10 text-teal-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 border border-teal-500/20 print:hidden">Project Proposal</span>
+                    <h3 class="text-xl font-bold uppercase tracking-tight text-slate-200 print:text-slate-900">Work Proposal & Bid</h3>
+                    <p class="text-sm text-slate-400 print:text-slate-500">Date: <span id="ui-proposal-date"></span></p>
+                    
+                    <div class="mt-4 bg-slate-800 p-4 rounded-xl text-left border border-slate-700 w-full md:w-64 print:bg-slate-100 print:text-slate-900 print:border-slate-200">
+                        <p class="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">Project Site Location:</p>
+                        <p class="font-bold text-slate-100 print:text-slate-900 tracking-tight text-base" id="ui-project-title"></p>
+                        <p class="text-xs text-slate-300 print:text-slate-700" id="ui-project-subtitle"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Config / Overview -->
+        <div class="p-8 border-b border-slate-200 print:p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-6">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-teal-600 print:hidden"></i> Proposal Specifications & Scope Selections
+                    </h3>
+                    <p class="text-sm text-slate-600 leading-relaxed max-w-2xl" id="ui-scope-note">
+                        Please review and select the specific items you would like resolved for the property. All selected items are dynamically itemized. You may deselect optional items to tailor this proposal to your target budget.
+                    </p>
+                </div>
+                <div class="bg-teal-50 border border-teal-200 p-4 rounded-xl w-full md:w-56 text-center shadow-sm flex flex-col justify-center">
+                    <p class="text-[10px] uppercase font-extrabold text-teal-800 tracking-widest mb-1">Est. Project Duration</p>
+                    <p class="text-2xl font-black text-teal-900" id="display-duration">---</p>
+                    <p class="text-[9px] text-teal-600 italic mt-1 font-semibold leading-none">Consecutive Working Days</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Category Containers Target -->
+        <div class="p-8 print:p-6 space-y-8" id="categories-wrapper">
+            <!-- Dynamic Category HTML will be rendered here by JS -->
+        </div>
+
+        <!-- Grand Total Investment Module -->
+        <div class="p-8 bg-slate-900 text-white border-t-4 border-teal-500 no-break print:bg-white print:text-slate-900 print:border-slate-900 print:p-6 print:border-t-2">
+            <div class="flex flex-col md:flex-row justify-between items-stretch gap-6">
+                <div class="flex-1 space-y-3 text-sm print:text-xs self-center">
+                    <h4 class="text-slate-400 font-bold uppercase tracking-widest text-[10px] border-b border-slate-800 pb-1 mb-2 print:border-slate-200 print:text-slate-600">Proposal Investment Breakdown</h4>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400 print:text-slate-600 font-medium">Selected Repairs & Upgrades Subtotal:</span>
+                        <span class="font-mono font-bold text-slate-200 print:text-slate-800" id="breakdown-subtotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between hidden" id="cc-fee-row">
+                        <span class="text-red-400 font-medium">Optional Credit Card Processing (<span id="ui-cc-rate-text"></span> Bank Charge):</span>
+                        <span class="font-mono font-bold text-red-400" id="breakdown-cc-fee">$0.00</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 italic mt-2 leading-snug">All values listed above represent completed turnkey service bids including materials, labor, and standard fastener allowances.</p>
+                </div>
+
+                <div class="md:w-80 bg-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col justify-center items-center text-center print:bg-slate-100 print:border-slate-200 print:p-4">
+                    <p class="text-xs uppercase text-slate-400 print:text-slate-600 font-extrabold tracking-widest mb-1">Estimated Total Investment</p>
+                    <div class="text-4xl font-black text-white print:text-slate-900 tracking-tight" id="grand-total">$0.00</div>
+                    <p class="text-[10px] text-teal-400 font-semibold italic mt-2 print:text-teal-700">All-Inclusive Professional Bid</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investment Distribution & Terms -->
+        <div class="p-8 border-b border-slate-200 print:p-6 no-break">
+            <h3 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-tight">Investment Distribution & Terms (3-Part Draw)</h3>
+            <p class="text-xs text-slate-500 mb-6 italic">Scheduling and custom materials procurement are initiated upon receipt of the mobilization deposit.</p>
+
+            <div class="grid sm:grid-cols-3 gap-6">
+                <!-- Deposit Card -->
+                <div class="bg-blue-50/70 p-6 rounded-xl border border-blue-200 shadow-sm border-l-8 border-l-blue-600">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-blue-900 text-lg uppercase tracking-tight">1. Mobilization Deposit</p>
+                            <p class="text-xs text-blue-700 italic font-semibold mb-3 tracking-tighter">Due at acceptance for material booking and project logistics.</p>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-extrabold text-blue-700 tracking-tight font-mono" id="deposit-amount">$0.00</p>
+                </div>
+
+                <!-- Draw 2 Card -->
+                <div class="bg-indigo-50/70 p-6 rounded-xl border border-indigo-200 shadow-sm border-l-8 border-l-indigo-600">
+                     <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-indigo-900 text-lg uppercase tracking-tight">2. Progress Draw</p>
+                            <p class="text-xs text-indigo-700 italic font-semibold mb-3 tracking-tighter">Due midway through project implementation.</p>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-extrabold text-indigo-700 tracking-tight font-mono" id="progress-amount">$0.00</p>
+                </div>
+
+                <!-- Balance Card -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm border-l-8 border-l-slate-800 print:bg-white print:border-slate-300">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-slate-800 text-lg uppercase tracking-tight">3. Completion Balance</p>
+                            <p class="text-xs text-slate-600 italic font-semibold mb-3 tracking-tighter">Due upon immediate completion, cleanup, and final walkthrough.</p>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-extrabold text-slate-800 tracking-tight font-mono" id="balance-amount">$0.00</p>
+                </div>
+            </div>
+
+            <!-- Optional CC Fee -->
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 no-print">
+                <label class="flex items-center cursor-pointer select-none">
+                    <input type="checkbox" id="use-credit-card" class="h-5 w-5 text-slate-800 rounded focus:ring-slate-500 cursor-pointer" onchange="updateCalculator()">
+                    <span class="ml-2.5 text-sm font-semibold text-slate-600 italic">Apply optional credit card processing fee (<span id="ui-cc-checkbox-text"></span> bank fee)</span>
+                </label>
+                <div class="text-right text-xs text-slate-400 font-semibold hidden" id="cc-fee-badge">
+                    Additional card charge applied.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gantt Chart Schedule Section -->
+        <div class="p-8 border-b border-slate-200 print:p-6 no-break">
+            <h3 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-tight">Project Schedule (Tues-Thurs Working Days)</h3>
+             <p class="text-xs text-slate-500 mb-6 italic">Estimated timeline based on a two-man crew working Tuesdays, Wednesdays, and Thursdays exclusively.</p>
+            
+            <div class="gantt-chart">
+                <div class="gantt-header-row">
+                    <div class="gantt-header-cell gantt-header-task">Task</div>
+                    <div class="gantt-header-cell">Wk1 Tue</div><div class="gantt-header-cell">Wk1 Wed</div><div class="gantt-header-cell">Wk1 Thu</div>
+                    <div class="gantt-header-cell">Wk2 Tue</div><div class="gantt-header-cell">Wk2 Wed</div><div class="gantt-header-cell">Wk2 Thu</div>
+                    <div class="gantt-header-cell">Wk3 Tue</div><div class="gantt-header-cell">Wk3 Wed</div><div class="gantt-header-cell">Wk3 Thu</div>
+                    <div class="gantt-header-cell">Wk4 Tue</div><div class="gantt-header-cell">Wk4 Wed</div><div class="gantt-header-cell">Wk4 Thu</div>
+                    <div class="gantt-header-cell">Wk5 Tue</div><div class="gantt-header-cell">Wk5 Wed</div>
+                </div>
+
+                <!-- Row 1: Prep & Wash -->
+                <div class="gantt-row">
+                    <div class="gantt-task-name">Prep, Wash & Repair</div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                </div>
+
+                <!-- Row 2: Scaffolding -->
+                <div class="gantt-row">
+                    <div class="gantt-task-name">Rigging & Staging</div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                </div>
+                
+                 <!-- Row 3: Carpentry -->
+                 <div class="gantt-row">
+                    <div class="gantt-task-name">High Fascia Carpentry</div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                </div>
+
+                <!-- Row 4: Wood Siding -->
+                <div class="gantt-row">
+                    <div class="gantt-task-name">Stain House/Shed Wood</div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                </div>
+
+                 <!-- Row 5: Masonry -->
+                 <div class="gantt-row">
+                    <div class="gantt-task-name">Paint Masonry/Stucco</div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                    <div class="gantt-cell"><div class="gantt-bar" style="right: 50%;"></div></div>
+                </div>
+
+                <!-- Row 6: Decks -->
+                <div class="gantt-row">
+                    <div class="gantt-task-name">Stain Decks/Rails/Posts</div>
+                    <div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div><div class="gantt-cell"></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                    <div class="gantt-cell"><div class="gantt-bar"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Conditions, Terms & Warranty -->
+        <div class="p-8 bg-white border-b border-slate-200 print:p-6 no-break">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 uppercase tracking-tight">Project Conditions, Terms & Warranty</h3>
+            
+            <div class="grid sm:grid-cols-2 gap-8 text-sm">
+                <div>
+                    <h4 class="font-bold text-slate-800 mb-2 uppercase text-xs tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-gavel text-teal-600 print:hidden"></i> Work Standards & Guidelines
+                    </h4>
+                    <ul class="space-y-2 text-slate-500 leading-relaxed text-xs" id="ui-standards-list">
+                        <li><strong class="text-slate-700 font-semibold">Premium Sealants:</strong> All caulking and sealants are industrial grade, solar-stable, and weather resistant.</li>
+                        <li><strong class="text-slate-700 font-semibold">Stain Application:</strong> Cabot Semi-Solid Acrylic will be applied to manufacturer specifications (1-coat strictly on rough wood).</li>
+                        <li><strong class="text-slate-700 font-semibold">Workmanship Protection:</strong> All work includes a 1-year service warranty against failure under normal operating conditions.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 mb-2 uppercase text-xs tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-teal-600 print:hidden"></i> Project Parameters
+                    </h4>
+                    <ul class="space-y-2 text-slate-500 leading-relaxed text-xs" id="ui-parameters-list">
+                        <li><strong class="text-slate-700 font-semibold">Structural Soundness:</strong> Proposal assumes underlying framing members beneath siding are sound. Hidden structural rot will be bid separately via change order if discovered.</li>
+                        <li><strong class="text-slate-700 font-semibold">Proposal Expiration:</strong> All values listed in this proposal are guaranteed for 30 calendar days from the date of issue.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authorization Block & Signature -->
+        <div class="p-8 bg-slate-50 border-t border-slate-200 print:bg-white print:p-6 no-break">
+            <h3 class="text-lg font-bold text-slate-900 mb-6 uppercase tracking-tight">Authorization & Acceptance of Proposal</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-1">Authorized Print Name</label>
+                    <input type="text" placeholder="Scott Underwood" class="mt-1 block w-full bg-white px-3 py-2.5 border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-500 print:bg-transparent print:border-b print:border-slate-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-1">Acceptance Date</label>
+                    <input type="date" id="input-date" class="mt-1 block w-full bg-white px-3 py-2.5 border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-500 print:bg-transparent print:border-b print:border-slate-400">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-1">Acceptance Signature Pad</label>
+                <div class="relative w-full sm:w-[500px]">
+                    <canvas id="signature-pad" class="mt-1 w-full sm:w-[500px] h-[150px] border border-slate-200 rounded-xl bg-white cursor-crosshair shadow-inner print:border-b print:border-slate-400 print:rounded-none"></canvas>
+                    <div class="absolute top-2 right-2 no-print">
+                        <button onclick="clearSignature()" class="text-[10px] bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 transition-all uppercase tracking-wider">Clear signature</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-slate-200 no-print flex justify-center">
+                <button onclick="window.print()" class="px-10 py-4 bg-slate-900 text-white font-extrabold rounded-xl shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> GENERATE FINAL WORK CONTRACT
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /******************************************************************************
+         * EASY JOB CONFIGURATION OBJECT
+         * Edit this configuration object for any new job!
+         ******************************************************************************/
+        const totalJobCost = 24339.00;
+        
+        // Split the total cost arbitrarily among the 3 selectable sections to sum up to $24,339
+        const carpentryPrice = 2800.00;
+        const deckPrice = 6500.00;
+        const housePrice = totalJobCost - carpentryPrice - deckPrice;
+
+        const PROJECT_CONFIG = {
+            company: {
+                name: "Holland Family",
+                subtitle: "Home Services, Inc.",
+                address: "70 Copperhead Trail, Murphy, NC 28906",
+                phone: "828-541-2442",
+                email: "Thehollandseven@gmail.com",
+                iconClass: "fa-house-chimney"
+            },
+            project: {
+                title: "52 Serenity Point", // From the PDF
+                subtitle: "Murphy, NC 28906",
+                date: "July 28, 2026",
+                drawRate1: 0.33, // Draw 1
+                drawRate2: 0.33, // Draw 2
+                creditCardFeeRate: 0.04 // 4% credit card processing fee
+            },
+            categories: [
+                {
+                    id: "exterior",
+                    title: "Exterior Restoration Phases",
+                    icon: "fa-paint-roller",
+                    color: "text-blue-500"
+                }
+            ],
+            items: [
+                {
+                    id: 'carpentry',
+                    label: 'Fascia Carpentry Repair & Scaffold Rigging',
+                    category: 'exterior',
+                    hours: 32, // Man hours
+                    price: carpentryPrice,
+                    desc: 'Erect, level, and relocate 15-foot rolling scaffold towers to access high A-frame peaks safely. Perform tear-off, measuring, cutting, installation, and caulking of approximately 60+ linear feet of damaged fascia board across various sections of the roofline utilizing premium primed exterior wood. <strong class="text-slate-700">Note: Existing gutters will not be removed; repair and replacement will be executed with gutters left in place. This does not include gutter detachment or reattachment.</strong>'
+                },
+                {
+                    id: 'house_stain',
+                    label: 'Main House & Shed Siding (Including Stucco)',
+                    category: 'exterior',
+                    hours: 120, // Man hours (96 siding + 24 stucco)
+                    price: housePrice,
+                    desc: 'Thoroughly pressure wash siding, shed, and stucco walls. Apply premium caulking to required seams. Spray and heavily back-roll a strict 1-coat application of Cabot Semi-Solid Acrylic Stain to 5,214 sq ft of rough-sawn wood walls, soffits, and ceilings. Apply premium masonry paint to ,1130 sq ft of lower foundation and shed masonry.'
+                },
+                {
+                    id: 'deck_stain',
+                    label: 'Deck Structural Posts, Rails, and Floors',
+                    category: 'exterior',
+                    hours: 80, // Man hours
+                    price: deckPrice,
+                    desc: 'Pressure wash all decking components. Apply 2-part exterior wood epoxy to structural deck cracks. Hand-brush and carefully cut-in 178 linear feet of tall spindles and 16 structural columns (up to 30 ft tall). Roll out 1,350 sq ft of deck floor with premium deck-rated semi-solid stain matched to existing chemistry.'
+                }
+            ]
+        };
+
+        function formatMoney(amount) {
+            return '$' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        // Populates Header and text parameters from PROJECT_CONFIG
+        function initializeProposalData() {
+            document.getElementById('ui-company-name').innerText = PROJECT_CONFIG.company.name;
+            document.getElementById('ui-company-subtitle').innerText = PROJECT_CONFIG.company.subtitle;
+            document.getElementById('ui-company-address').innerText = PROJECT_CONFIG.company.address;
+            document.getElementById('ui-company-phone').innerText = PROJECT_CONFIG.company.phone;
+            document.getElementById('ui-company-email').innerText = PROJECT_CONFIG.company.email;
+            
+            document.getElementById('ui-project-title').innerText = PROJECT_CONFIG.project.title;
+            document.getElementById('ui-project-subtitle').innerText = PROJECT_CONFIG.project.subtitle;
+            document.getElementById('ui-proposal-date').innerText = PROJECT_CONFIG.project.date;
+
+            const ccPct = (PROJECT_CONFIG.project.creditCardFeeRate * 100).toFixed(1) + '%';
+            document.getElementById('ui-cc-rate-text').innerText = ccPct;
+            document.getElementById('ui-cc-checkbox-text').innerText = ccPct;
+
+            // Set today or proposal date in signature input
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1; // Months start at 0!
+            let dd = today.getDate();
+            if (dd < 10) dd = '0' + dd;
+            if (mm < 10) mm = '0' + mm;
+            const formattedToday = yyyy + '-' + mm + '-' + dd;
+            document.getElementById('input-date').value = formattedToday;
+
+            // Render categories and items
+            renderCategoriesAndItems();
+        }
+
+        // Dynamically renders categories and items based on configuration
+        function renderCategoriesAndItems() {
+            const wrapper = document.getElementById('categories-wrapper');
+            wrapper.innerHTML = '';
+
+            PROJECT_CONFIG.categories.forEach(cat => {
+                // Find items for this category
+                const catItems = PROJECT_CONFIG.items.filter(item => item.category === cat.id);
+                if (catItems.length === 0) return;
+
+                const catSection = document.createElement('div');
+                catSection.className = 'space-y-4';
+                catSection.innerHTML = `
+                    <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2 flex items-center gap-2">
+                        <i class="fa-solid ${cat.icon} ${cat.color} print:hidden"></i> ${cat.title}
+                    </h4>
+                    <div id="category-${cat.id}" class="space-y-3"></div>
+                `;
+                wrapper.appendChild(catSection);
+
+                const itemTarget = catSection.querySelector(`#category-${cat.id}`);
+                catItems.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `item-row bg-white p-5 rounded-xl border border-slate-200 flex items-start justify-between shadow-sm hover:border-slate-300 transition-all duration-200 selected`;
+                    card.id = `row-${item.id}`;
+                    card.innerHTML = `
+                        <div class="flex items-start gap-4">
+                            <input type="checkbox" id="check-${item.id}" class="mt-1 h-5 w-5 text-slate-800 rounded border-slate-300 focus:ring-slate-500 cursor-pointer no-print" onchange="updateCalculator()" checked>
+                            <span class="checkbox-replacement hidden font-bold text-slate-800 print:inline-block">[ ✓ ]</span>
+                            <label for="check-${item.id}" class="cursor-pointer select-none">
+                                <span class="block font-bold text-slate-900 text-base mb-1">${item.label}</span>
+                                <span class="block text-xs text-slate-500 leading-relaxed font-medium">${item.desc}</span>
+                            </label>
+                        </div>
+                        <div class="text-right ml-4 flex flex-col justify-between items-end h-full">
+                            <span class="block font-mono font-extrabold text-slate-800 text-lg">${formatMoney(item.price)}</span>
+                        </div>
+                    `;
+                    itemTarget.appendChild(card);
+                });
+            });
+        }
+
+        function updateCalculator() {
+            let subtotal = 0;
+            let totalHours = 0; // Keeping track of Man Hours
+
+            PROJECT_CONFIG.items.forEach(item => {
+                const check = document.getElementById(`check-${item.id}`);
+                const row = document.getElementById(`row-${item.id}`);
+                if (!check || !row) return;
+
+                if (check.checked) {
+                    row.classList.add('selected');
+                    row.classList.remove('disabled-card');
+                    subtotal += item.price;
+                    totalHours += item.hours;
+                } else {
+                    row.classList.remove('selected');
+                    row.classList.add('disabled-card');
+                }
+            });
+
+            // Credit Card Fee toggle
+            let grandTotal = subtotal;
+            let ccFee = 0;
+            const useCreditCard = document.getElementById('use-credit-card').checked;
+            
+            if (useCreditCard) {
+                ccFee = subtotal * PROJECT_CONFIG.project.creditCardFeeRate;
+                grandTotal += ccFee;
+                document.getElementById('cc-fee-row').classList.remove('hidden');
+                document.getElementById('cc-fee-badge').classList.remove('hidden');
+                document.getElementById('breakdown-cc-fee').innerText = formatMoney(ccFee);
+            } else {
+                document.getElementById('cc-fee-row').classList.add('hidden');
+                document.getElementById('cc-fee-badge').classList.add('hidden');
+            }
+
+            // Calculations for 3-part draw
+            const draw1 = grandTotal * PROJECT_CONFIG.project.drawRate1;
+            const draw2 = grandTotal * PROJECT_CONFIG.project.drawRate2;
+            const finalBalance = grandTotal - draw1 - draw2;
+
+            // UI Summary updates
+            document.getElementById('breakdown-subtotal').innerText = formatMoney(subtotal);
+            document.getElementById('grand-total').innerText = formatMoney(grandTotal);
+            document.getElementById('deposit-amount').innerText = formatMoney(draw1);
+            document.getElementById('progress-amount').innerText = formatMoney(draw2);
+            document.getElementById('balance-amount').innerText = formatMoney(finalBalance);
+
+            // Dynamic duration based on 2-man crew hours
+            // Total Man Hours / 2 guys = Clock Hours. Clock Hours / 8 = Clock Days.
+            const clockDays = Math.ceil((totalHours / 2) / 8); 
+            const durationDisplay = document.getElementById('display-duration');
+            if (clockDays === 0) {
+                durationDisplay.innerText = "---";
+            } else {
+                durationDisplay.innerText = `${clockDays} - ${clockDays + 2} Days`;
+            }
+        }
+
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            ctx.scale(ratio, ratio);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 200);
+
+        function start(e) { drawing = true; draw(e); }
+        function stop() { drawing = false; ctx.beginPath(); }
+        function draw(e) {
+            if (!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            ctx.lineWidth = 2.5; 
+            ctx.lineCap = 'round'; 
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineTo(x, y); 
+            ctx.stroke(); 
+            ctx.beginPath(); 
+            ctx.moveTo(x, y);
+            e.preventDefault();
+        }
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mouseup', stop);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', start, {passive: false});
+        canvas.addEventListener('touchend', stop);
+        canvas.addEventListener('touchmove', draw, {passive: false});
+
+        function clearSignature() { 
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        }
+
+        // Run setup
+        window.onload = function() {
+            initializeProposalData();
+            updateCalculator();
+        }
+    </script>
+</body>
+</html>
